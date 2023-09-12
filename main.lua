@@ -1,7 +1,14 @@
 if arg[#arg] == "-debug" then require("mobdebug").start() end
 
--- global objects
+-- global objects:
+
+-- user moves this
 local movable = {}
+
+-- roto-translation transformation
+local transform = { x = 150, y = 150, rotation = math.pi/2 }
+
+-- randomly-generated
 local points = {}
 
 -- load: prepare, one time setup
@@ -10,6 +17,11 @@ function love.load()
 
   movable.drawable_data = love.image.newImageData("car.png")
   movable.drawable = love.graphics.newImage(movable.drawable_data)
+
+  transform.w=movable.drawable:getWidth()/2
+  transform.h=movable.drawable:getHeight()/2
+  transform.angle = math.atan(transform.w/transform.h)
+  transform.distance = math.sqrt(transform.w^2 + transform.h^2)
 
   math.randomseed(os.time())
   for _=1,100 do
@@ -22,11 +34,36 @@ local keys_down = {}
 function love.keypressed( key ) keys_down[key]=true end
 function love.keyreleased( key ) keys_down[key]=false end
 
--- roto-translation transformation
-local transform = { x = 150, y = 150, rotation = math.pi/2 }
+local function inside_polygon(polygon, point)
+  local last = polygon[#polygon]
+  for i = 1, #polygon do
+    local current = polygon[i]
+
+    local function halfplane(px, p1, p2)
+      return ( (p2[1] - p1[1]) * (px[2] - p1[2]) - (p2[2] - p1[2]) * (px[1] - p1[1]) ) >= 0
+    end
+
+    if halfplane(point, last, current) then
+      return false
+    end
+
+    last = current
+  end
+  return true
+end
+
+local function bounding_box_corner(angle_xy)
+  local x = transform.x-math.sin(-transform.rotation+angle_xy)*transform.distance
+  local y = transform.y-math.cos(-transform.rotation+angle_xy)*transform.distance
+  return {x,y}
+end
 
 -- update every frame before drawing it
 function love.update(dt)
+
+  -- quit with key
+  if keys_down["escape"] then love.event.quit() end
+
   local rotation_increment = dt*math.pi/2
 
   -- rotate direction clock-wise
@@ -45,8 +82,21 @@ function love.update(dt)
     transform.y = transform.y - math.cos(-transform.rotation)*200*dt
   end
 
-  -- quit with key
-  if keys_down["escape"] then love.event.quit() end
+  local quad = {}
+  local angle = transform.angle
+  quad[1] = bounding_box_corner(-angle) -- front right
+  quad[2] = bounding_box_corner(angle)  -- front left
+  angle = angle + math.pi
+  quad[3] = bounding_box_corner(-angle) -- back left
+  quad[4] = bounding_box_corner(angle)  -- back right
+
+  local points2 = {}
+  for _,point in ipairs(points) do
+    if not inside_polygon(quad, point) then
+      table.insert(points2, point)
+    end
+  end
+  points = points2
 
 end
 
@@ -65,25 +115,25 @@ local function draw_debug_gizmos()
 
   -- draw debug support gizmo
   love.graphics.setColor(1,0,0)
-  local square_size = 20
+  local square_size = 5
 
   local function draw_gizmo(x,y)
     love.graphics.rectangle("line", x-square_size/2, y-square_size/2, square_size,square_size)
   end
   draw_gizmo(transform.x,transform.y)
 
-  local angle = math.atan(transform.h/transform.w)/2
-
-  local function draw_gizmo_corner(angle1, angle2)
-    draw_gizmo(transform.x-math.sin(-transform.rotation+angle1)*transform.w, transform.y-math.cos(-transform.rotation+angle2)*transform.h)
+  local function draw_gizmo_corner(angle_xy)
+    local point = bounding_box_corner(angle_xy)
+    draw_gizmo( point[1], point[2])
   end
 
   ---[[
-  draw_gizmo_corner(-angle, -angle) -- front right
-  draw_gizmo_corner(angle, angle)   -- front left
+  local angle = transform.angle
+  draw_gizmo_corner(-angle) -- front right
+  draw_gizmo_corner(angle)  -- front left
   angle = angle + math.pi
-  draw_gizmo_corner(-angle, -angle) -- back left
-  draw_gizmo_corner(angle, angle)   -- back right
+  draw_gizmo_corner(-angle) -- back left
+  draw_gizmo_corner(angle)  -- back right
   --]]
 
 end
@@ -103,12 +153,10 @@ function love.draw()
 
   -- draw movable
   love.graphics.setColor(1,1,1)
-  transform.w=movable.drawable:getWidth()/2
-  transform.h=movable.drawable:getHeight()/2
   love.graphics.draw( movable.drawable, transform.x, transform.y, transform.rotation, 1, 1,
     transform.w, transform.h )
 
-  draw_debug_gizmos()
+  --draw_debug_gizmos()
 
   -- end camera
   love.graphics.pop()
