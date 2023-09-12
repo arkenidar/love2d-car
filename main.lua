@@ -61,6 +61,33 @@ function love.mousemoved( x, y, dx, dy )
   end
 end
 
+local function draw_debug_gizmos()
+
+  -- draw debug support gizmo
+  love.graphics.setColor(1,0,0)
+  local square_size = 20
+
+  local function draw_gizmo(x,y)
+    love.graphics.rectangle("line", x-square_size/2, y-square_size/2, square_size,square_size)
+  end
+  draw_gizmo(transform.x,transform.y)
+
+  local angle = math.atan(transform.h/transform.w)/2
+
+  local function draw_gizmo_corner(angle1, angle2)
+    draw_gizmo(transform.x-math.sin(-transform.rotation+angle1)*transform.w, transform.y-math.cos(-transform.rotation+angle2)*transform.h)
+  end
+
+  ---[[
+  draw_gizmo_corner(-angle, -angle) -- front right
+  draw_gizmo_corner(angle, angle)   -- front left
+  angle = angle + math.pi
+  draw_gizmo_corner(-angle, -angle) -- back left
+  draw_gizmo_corner(angle, angle)   -- back right
+  --]]
+
+end
+
 -- render every frame here
 function love.draw()
 
@@ -81,29 +108,7 @@ function love.draw()
   love.graphics.draw( movable.drawable, transform.x, transform.y, transform.rotation, 1, 1,
     transform.w, transform.h )
 
-  -- draw debug support gizmo
-  love.graphics.setColor(1,0,0)
-  local square_size = 20
-  local function draw_gizmo(x,y)
-    love.graphics.rectangle("line", x-square_size/2, y-square_size/2, square_size,square_size)
-  end
-  draw_gizmo(transform.x,transform.y)
-
-  local angle = math.atan(transform.h/transform.w)/2
-
-  -- front right
-  draw_gizmo(transform.x-math.sin(-transform.rotation-angle)*transform.w, transform.y-math.cos(-transform.rotation-angle)*transform.h)
-
-  -- front left
-  draw_gizmo(transform.x-math.sin(-transform.rotation+angle)*transform.w, transform.y-math.cos(-transform.rotation+angle)*transform.h)
-
-  angle = angle + math.pi
-
-  -- back left
-  draw_gizmo(transform.x-math.sin(-transform.rotation-angle)*transform.w, transform.y-math.cos(-transform.rotation-angle)*transform.h)
-
-  -- back right
-  draw_gizmo(transform.x-math.sin(-transform.rotation+angle)*transform.w, transform.y-math.cos(-transform.rotation+angle)*transform.h)
+  draw_debug_gizmos()
 
   -- end camera
   love.graphics.pop()
