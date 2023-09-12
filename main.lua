@@ -1,3 +1,4 @@
+if arg[#arg] == "-debug" then require("mobdebug").start() end
 
 -- global objects
 local movable = {}
@@ -75,13 +76,34 @@ function love.draw()
 
   -- draw movable
   love.graphics.setColor(1,1,1)
+  transform.w=movable.drawable:getWidth()/2
+  transform.h=movable.drawable:getHeight()/2
   love.graphics.draw( movable.drawable, transform.x, transform.y, transform.rotation, 1, 1,
-    movable.drawable:getWidth()/2, movable.drawable:getHeight()/2 )
+    transform.w, transform.h )
 
   -- draw debug support gizmo
   love.graphics.setColor(1,0,0)
   local square_size = 20
-  love.graphics.rectangle("line", transform.x-square_size/2, transform.y-square_size/2, square_size,square_size)
+  local function draw_gizmo(x,y)
+    love.graphics.rectangle("line", x-square_size/2, y-square_size/2, square_size,square_size)
+  end
+  draw_gizmo(transform.x,transform.y)
+
+  local angle = math.atan(transform.h/transform.w)/2
+
+  -- front right
+  draw_gizmo(transform.x-math.sin(-transform.rotation-angle)*transform.w, transform.y-math.cos(-transform.rotation-angle)*transform.h)
+
+  -- front left
+  draw_gizmo(transform.x-math.sin(-transform.rotation+angle)*transform.w, transform.y-math.cos(-transform.rotation+angle)*transform.h)
+
+  angle = angle + math.pi
+
+  -- back left
+  draw_gizmo(transform.x-math.sin(-transform.rotation-angle)*transform.w, transform.y-math.cos(-transform.rotation-angle)*transform.h)
+
+  -- back right
+  draw_gizmo(transform.x-math.sin(-transform.rotation+angle)*transform.w, transform.y-math.cos(-transform.rotation+angle)*transform.h)
 
   -- end camera
   love.graphics.pop()
