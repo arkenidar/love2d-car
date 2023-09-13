@@ -1,4 +1,10 @@
-if arg[#arg] == "-debug" then require("mobdebug").start() end
+--- debuggers
+
+-- https://github.com/pkulchenko/MobDebug in e.g. ZeroBrane Studio IDE
+if arg[#arg] == "-debug" then require("mobdebug").start() end -- see docs
+
+-- tomblind.local-lua-debugger-vscode in Microsoft VisualStudio Code: see also ".vscode/launch.json"
+if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end -- see docs
 
 -- global objects:
 
