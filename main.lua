@@ -17,7 +17,7 @@ local transform = { x = 150, y = 150, rotation = math.pi/2 }
 local floor = {}
 
 -- randomly-generated
-local points = {}
+local points = { square_size=10 }
 
 -- load: prepare, one time setup
 function love.load()
@@ -36,9 +36,34 @@ function love.load()
 
   math.randomseed(os.time())
   for _=1,100 do
-    local position = {math.random( 0,600 ), math.random( 0,400 )}
-    local r,g,b,a = floor.drawable_data:getPixel(position[1], position[2])
-    if a==0 then table.insert(points, position ) end
+    local position = {math.random( 0,600-1 ), math.random( 0,400-1 )}
+    local function valid_point(point_position)
+      local drawable_data = floor.drawable_data
+      local function position_check(position_to_check)
+        local w = drawable_data:getWidth()
+        local h = drawable_data:getHeight()
+        local x, y = position_to_check[1], position_to_check[2]
+        local inside_rectangle = x>=0 and y>=0 and x<w and y<h
+        if not inside_rectangle then
+          return true -- case: out-side
+        end
+        local r,g,b,a = drawable_data:getPixel(x, y)
+        return a==0 -- case: transparent
+      end
+      local x, y = point_position[1], point_position[2] -- square center
+      local square_size = points.square_size
+      if
+       position_check( {x-square_size/2, y-square_size/2} ) and
+       position_check( {x-square_size/2, y+square_size/2} ) and
+       position_check( {x+square_size/2, y-square_size/2} ) and
+       position_check( {x+square_size/2, y+square_size/2} ) then
+         return true
+      end
+
+      return false
+    end
+
+    if valid_point(position) then table.insert(points, position ) end
   end
 end
 
@@ -103,13 +128,13 @@ function love.update(dt)
   quad[3] = bounding_box_corner(-angle) -- back left
   quad[4] = bounding_box_corner(angle)  -- back right
 
-  local points2 = {}
+  local points_after = { square_size = points.square_size }
   for _,point in ipairs(points) do
     if not inside_polygon(quad, point) then
-      table.insert(points2, point)
+      table.insert(points_after, point)
     end
   end
-  points = points2
+  points = points_after
 
 end
 
@@ -163,8 +188,9 @@ function love.draw()
 
   -- draw points
   love.graphics.setColor(0,1,0)
+  local square_size = points.square_size
   for _,point in ipairs(points) do
-    love.graphics.rectangle("fill", point[1], point[2], 10,10)
+    love.graphics.rectangle("fill", point[1]-square_size/2, point[2]-square_size/2, square_size,square_size )
   end
 
   -- draw movable
