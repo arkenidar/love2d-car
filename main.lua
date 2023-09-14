@@ -14,12 +14,17 @@ local movable = {}
 -- roto-translation transformation
 local transform = { x = 150, y = 150, rotation = math.pi/2 }
 
+local floor = {}
+
 -- randomly-generated
 local points = {}
 
 -- load: prepare, one time setup
 function love.load()
   love.window.setTitle( ' "arcade-car" in Love2D' )
+
+  floor.drawable_data = love.image.newImageData("floor.png")
+  floor.drawable = love.graphics.newImage(floor.drawable_data)
 
   movable.drawable_data = love.image.newImageData("car.png")
   movable.drawable = love.graphics.newImage(movable.drawable_data)
@@ -31,7 +36,9 @@ function love.load()
 
   math.randomseed(os.time())
   for _=1,100 do
-    table.insert(points, {math.random(-100,400), math.random(-100,400)} )
+    local position = {math.random( 0,600 ), math.random( 0,400 )}
+    local r,g,b,a = floor.drawable_data:getPixel(position[1], position[2])
+    if a==0 then table.insert(points, position ) end
   end
 end
 
@@ -150,6 +157,9 @@ function love.draw()
   -- begin camera
   love.graphics.push()
   love.graphics.translate(camera.x,camera.y)
+
+  -- floor
+  love.graphics.draw(floor.drawable)
 
   -- draw points
   love.graphics.setColor(0,1,0)
