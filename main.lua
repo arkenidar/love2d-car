@@ -65,6 +65,9 @@ function love.load()
 
     if valid_point(position) then table.insert(points, position ) end
   end
+
+  local emoji_font = love.graphics.newFont("Symbola.ttf", 25)
+  love.graphics.setFont(emoji_font)
 end
 
 -- keys
@@ -198,7 +201,7 @@ function love.draw()
   love.graphics.draw( movable.drawable, transform.x, transform.y, transform.rotation, 1, 1,
     transform.w, transform.h )
 
-  --draw_debug_gizmos()
+  draw_debug_gizmos()
 
   -- end camera
   love.graphics.pop()
@@ -207,10 +210,10 @@ function love.draw()
 
   -- draw back-ground for texts
   love.graphics.setColor(1,1,1)
-  love.graphics.rectangle("fill", 10, 10, 250,50)
+  love.graphics.rectangle("fill", 10, 10, 450,50)
 
   -- draw texts
   love.graphics.setColor(0,0,1)
-  love.graphics.print("use arrows-keys on keyboard", 15, 15)
-  love.graphics.print("use click+drag for camera position", 15, 30)
+  love.graphics.print("😀 use arrows-keys on keyboard", 15, 15)
+  love.graphics.print("use click+drag for camera position", 15, 35)
 end
