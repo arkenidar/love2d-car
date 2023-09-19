@@ -208,8 +208,8 @@ function love.draw()
 
   -- camera ended
 
-  -- draw back-ground for texts
-  love.graphics.setColor(1,1,1)
+  -- draw back-ground for texts (with transparence)
+  love.graphics.setColor(1,1,1,0.7)
   love.graphics.rectangle("fill", 10, 10, 450,50)
 
   -- draw texts
